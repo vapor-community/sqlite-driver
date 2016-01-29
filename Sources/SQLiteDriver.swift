@@ -1,10 +1,10 @@
 import Fluent
 
-class SQLiteDriver: Fluent.Driver {
+public class SQLiteDriver: Fluent.Driver {
 
 	let database = SQLite()
 
-	func fetchOne(table table: String, filters: [Filter]) -> [String: String]? {
+	public func fetchOne(table table: String, filters: [Filter]) -> [String: String]? {
 		let sql = SQL(operation: .SELECT, table: table)
 		sql.filters = filters
 		sql.limit = 1
@@ -17,7 +17,7 @@ class SQLiteDriver: Fluent.Driver {
 		return nil
 	}
 
-	func fetch(table table: String, filters: [Filter]) -> [[String: String]] {
+	public func fetch(table table: String, filters: [Filter]) -> [[String: String]] {
 		let sql = SQL(operation: .SELECT, table: table)
 		sql.filters = filters
 
@@ -30,14 +30,14 @@ class SQLiteDriver: Fluent.Driver {
 		return data
 	}
 
-	func delete(table table: String, filters: [Filter]) {
+	public func delete(table table: String, filters: [Filter]) {
 		let sql = SQL(operation: .DELETE, table: table)
 		sql.filters = filters
 		
 		self.database.execute(sql.query)
 	}
 
-	func update(table table: String, filters: [Filter], data: [String: String]) {
+	public func update(table table: String, filters: [Filter], data: [String: String]) {
 		let sql = SQL(operation: .UPDATE, table: table)
 		sql.filters = filters
 		sql.data = data
@@ -45,7 +45,7 @@ class SQLiteDriver: Fluent.Driver {
 		self.database.execute(sql.query)
 	}
 
-	func insert(table table: String, items: [[String: String]]) {
+	public func insert(table table: String, items: [[String: String]]) {
 		for item in items {
 			let sql = SQL(operation: .INSERT, table: table)
 			sql.data = item
@@ -54,17 +54,17 @@ class SQLiteDriver: Fluent.Driver {
 		}
 	}
 
-	func upsert(table table: String, items: [[String: String]]) {
+	public func upsert(table table: String, items: [[String: String]]) {
 		//check if object exists
 	}
  
-	func exists(table table: String, filters: [Filter]) -> Bool {
+	public func exists(table table: String, filters: [Filter]) -> Bool {
 		print("exists \(filters.count) filters on \(table)")
 
 		return false
 	}
 
-	func count(table table: String, filters: [Filter]) -> Int {
+	public func count(table table: String, filters: [Filter]) -> Int {
 		print("count \(filters.count) filters on \(table)")
 
 		return 0

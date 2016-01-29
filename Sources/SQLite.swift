@@ -9,6 +9,10 @@ class SQLite {
 			print("Could not open database")
 			sqlite3_close(self.database);
 		}
+
+		self.execute("CREATE TABLE users(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);")
+		self.execute("INSERT INTO users (id, name) VALUES (NULL, 'Tanner');")
+		self.execute("INSERT INTO users (id, name) VALUES (NULL, 'Jill');")
 	}
 
 	func close() {
@@ -69,19 +73,5 @@ class SQLite {
 
 		return result.rows
 	}
-
-	func test() {
-		self.execute("CREATE TABLE users(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);")
-		self.execute("INSERT INTO users (id, name) VALUES (NULL, 'Tanner');")
-		self.execute("INSERT INTO users (id, name) VALUES (NULL, 'Jill');")
-
-		let rows = self.execute("SELECT * FROM users;")
-		for row in rows {
-			print(row.data)
-		}
-
-		self.close()
-	}
-
 
 }

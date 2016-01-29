@@ -2,8 +2,15 @@ import Fluent
 
 class SQLiteDriver: Fluent.Driver {
 
+	let database = SQLite()
+
 	func fetchOne(table table: String, filters: [Filter]) -> [String: String]? {
 		print("fetch one \(filters.count) filters on \(table)")
+
+		let rows = self.database.execute("SELECT * FROM users;")
+		for row in rows {
+			return row.data
+		}
 
 		return nil
 	}

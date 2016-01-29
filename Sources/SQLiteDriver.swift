@@ -69,4 +69,8 @@ public class SQLiteDriver: Fluent.Driver {
 
 		return 0
 	}
+
+	public init() {
+		
+	}
 }

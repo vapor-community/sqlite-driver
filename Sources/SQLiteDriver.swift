@@ -5,38 +5,53 @@ class SQLiteDriver: Fluent.Driver {
 	let database = SQLite()
 
 	func fetchOne(table table: String, filters: [Filter]) -> [String: String]? {
-		print("fetch one \(filters.count) filters on \(table)")
+		let sql = SQL(operation: .SELECT, table: table)
+		sql.filters = filters
+		sql.limit = 1
 
-		let rows = self.database.execute("SELECT * FROM users;")
-		for row in rows {
-			return row.data
+		let rows = self.database.execute(sql.query)
+		if rows.count > 0 {
+			return rows[0].data
 		}
 
 		return nil
 	}
 
 	func fetch(table table: String, filters: [Filter]) -> [[String: String]] {
-		print("fetch \(filters.count) filters on \(table)")
+		let sql = SQL(operation: .SELECT, table: table)
+		sql.filters = filters
 
-		return []
+		var data: [[String: String]] = []
+
+		for row in self.database.execute(sql.query) {
+			data.append(row.data)
+		}
+
+		return data
 	}
 
 	func delete(table table: String, filters: [Filter]) {
-		print("delete \(filters.count) filters on \(table)")
-
-		//implement me
+		let sql = SQL(operation: .DELETE, table: table)
+		sql.filters = filters
+		
+		self.database.execute(sql.query)
 	}
 
 	func update(table table: String, filters: [Filter], data: [String: String]) {
-		print("update \(filters.count) filters \(data.count) data points on \(table)")
+		let sql = SQL(operation: .UPDATE, table: table)
+		sql.filters = filters
+		sql.data = data
 
-		//implement me
+		self.database.execute(sql.query)
 	}
 
 	func insert(table table: String, items: [[String: String]]) {
-		print("insert \(items.count) items into \(table)")
+		for item in items {
+			let sql = SQL(operation: .INSERT, table: table)
+			sql.data = item
 
-		//implement me
+			self.database.execute(sql.query)
+		}
 	}
 
 	func upsert(table table: String, items: [[String: String]]) {

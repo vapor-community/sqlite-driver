@@ -1,7 +1,7 @@
 #if os(Linux)
 	import CSQLiteLinux
 #else
-	import CSQliteMac
+	import CSQLiteMac
 #endif
 
 class SQLite {

@@ -1,4 +1,8 @@
-import CSQLite
+#if os(Linux)
+	import CSQLiteLinux
+#else
+	import CSQliteMac
+#endif
 
 class SQLite {
 	var database: COpaquePointer = nil

@@ -1,7 +1,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "SQLiteDriver",
+    name: "FluentSQLite",
     dependencies: [ 
    		.Package(url: "https://github.com/tannernelson/csqlite.git", majorVersion: 0),
         //.Package(url: "https://github.com/kylef/Spectre.git", majorVersion: 0) //testing

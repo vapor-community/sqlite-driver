@@ -2,7 +2,15 @@ import Fluent
 
 public class SQLiteDriver: Fluent.Driver {
 
-	let database = SQLite()
+	var database = SQLite()
+
+	public init() {
+		database.initWithPath("Database/main.sqlite")
+	}
+
+	public init(path: String){
+		database.initWithPath(path)
+	}
 
 	public func fetchOne(table table: String, filters: [Filter]) -> [String: String]? {
 		let sql = SQL(operation: .SELECT, table: table)
@@ -33,7 +41,7 @@ public class SQLiteDriver: Fluent.Driver {
 	public func delete(table table: String, filters: [Filter]) {
 		let sql = SQL(operation: .DELETE, table: table)
 		sql.filters = filters
-		
+
 		self.database.execute(sql.query)
 	}
 
@@ -57,7 +65,7 @@ public class SQLiteDriver: Fluent.Driver {
 	public func upsert(table table: String, items: [[String: String]]) {
 		//check if object exists
 	}
- 
+
 	public func exists(table table: String, filters: [Filter]) -> Bool {
 		print("exists \(filters.count) filters on \(table)")
 
@@ -70,7 +78,4 @@ public class SQLiteDriver: Fluent.Driver {
 		return 0
 	}
 
-	public init() {
-		
-	}
 }

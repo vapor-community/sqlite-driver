@@ -5,11 +5,8 @@
 #endif
 
 class SQLite {
-	var database: COpaquePointer = nil
 
-	init() {
-		initWithPath("Database/main.sqlite")
-	}
+	var database: COpaquePointer = nil
 
 	func initWithPath(path: String){
 		let code = sqlite3_open_v2(path, &self.database, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil);

@@ -8,7 +8,11 @@ class SQLite {
 	var database: COpaquePointer = nil
 
 	init() {
-		let code = sqlite3_open_v2("Database/main.sqlite", &self.database, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil);
+		initWithPath("Database/main.sqlite")
+	}
+
+	func initWithPath(path: String){
+		let code = sqlite3_open_v2(path, &self.database, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil);
 		if code != 0 {
 			print("Could not open database")
 			sqlite3_close(self.database);

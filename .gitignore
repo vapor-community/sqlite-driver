@@ -3,3 +3,4 @@ Sources/main.swift
 .build
 Packages
 Database
+*.xcodeproj

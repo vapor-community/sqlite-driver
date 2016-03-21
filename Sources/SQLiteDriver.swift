@@ -4,7 +4,7 @@ public class SQLiteDriver: Fluent.Driver {
     let database: SQLite!
     public var databaseFilePath = "Database/main.sqlite"
     
-    init() throws {
+    public init() throws {
         self.database = try SQLite(path: self.databaseFilePath)
     }
     

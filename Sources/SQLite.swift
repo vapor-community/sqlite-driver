@@ -14,8 +14,8 @@ class SQLite {
     private var statementPointer: UnsafeMutablePointer<COpaquePointer> = nil
 	var database: COpaquePointer = nil
     
-	init() throws {
-        let code = sqlite3_open_v2("main.sqlite", &self.database, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
+	init(path: String) throws {
+        let code = sqlite3_open_v2(path, &self.database, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
 		if code != SQLITE_OK {
             print(code)
             sqlite3_close(self.database)
@@ -161,7 +161,7 @@ class SQLite {
         }
     }
     
-	func test() {
+	func generateTestData() {
 		try! self.execute("CREATE TABLE user (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);")
 		try! self.execute("INSERT INTO user (id, name) VALUES (NULL, 'Tanner');")
 		try! self.execute("INSERT INTO user (id, name) VALUES (NULL, 'Jill');")

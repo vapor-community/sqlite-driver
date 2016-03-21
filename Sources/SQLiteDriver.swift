@@ -2,9 +2,11 @@ import Fluent
 
 public class SQLiteDriver: Fluent.Driver {
     let database: SQLite!
+    public var databaseFilePath: String?
     
     init() throws {
-        self.database = try SQLite()
+        let path = databaseFilePath ?? "Database/main.swift"
+        self.database = try SQLite(path)
     }
     
     public func execute<T: Model>(query: Query<T>) throws -> [[String: Value]] {

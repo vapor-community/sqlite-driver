@@ -162,9 +162,13 @@ class SQLite {
     }
     
 	func generateTestData() {
-		try! self.execute("CREATE TABLE user (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);")
-		try! self.execute("INSERT INTO user (id, name) VALUES (NULL, 'Tanner');")
-		try! self.execute("INSERT INTO user (id, name) VALUES (NULL, 'Jill');")
+        do {
+            try self.execute("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);")
+            try self.execute("INSERT INTO users (id, name) VALUES (NULL, 'Tanner');")
+            try self.execute("INSERT INTO users (id, name) VALUES (NULL, 'Jill');")
+        } catch {
+            //test data already made
+        }
 	}
 
 }

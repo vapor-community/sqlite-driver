@@ -2,7 +2,7 @@ import Fluent
 
 public class SQLiteDriver: Fluent.Driver {
     let database: SQLite!
-    public var databaseFilePath = "Database/main.swift"
+    public var databaseFilePath = "Database/main.sqlite"
     
     init() throws {
         self.database = try SQLite(path: self.databaseFilePath)

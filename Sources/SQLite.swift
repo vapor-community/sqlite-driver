@@ -11,19 +11,20 @@ public enum SQLiteError: ErrorType {
 }
 
 class SQLite {
+    private var statementPointer: UnsafeMutablePointer<COpaquePointer> = nil
 	var database: COpaquePointer = nil
-
+    
 	init() throws {
-        let code = sqlite3_open_v2("Database/main.sqlite", &self.database, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil);
+        let code = sqlite3_open_v2("main.sqlite", &self.database, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil)
 		if code != SQLITE_OK {
             print(code)
-            sqlite3_close(self.database);
+            sqlite3_close(self.database)
             throw SQLiteError.ConnectionException
 		}
 	}
 
 	func close() {
-		sqlite3_close(self.database);
+		sqlite3_close(self.database)
 	}
 
 	class Result {
@@ -41,85 +42,122 @@ class SQLite {
 			self.rows = []
 		}
 	}
-
-    func execute(statement: String, values: [Any]? = nil) throws -> [Result.Row] {
-        if let values = values where !values.isEmpty {
-            try bind(values)
+    
+    func execute(statement: String, bindHandler: (() -> ())) throws -> [Result.Row] {
+        self.statementPointer = UnsafeMutablePointer<COpaquePointer>.alloc(1)
+        if sqlite3_prepare_v2(self.database, statement, -1, self.statementPointer, nil) != SQLITE_OK {
+            print("preparing failed")
+            return []
         }
-
-		let resultPointer = UnsafeMutablePointer<Result>.alloc(1)
-
-		var result = Result()
-		resultPointer.initializeFrom(&result, count: 1)
-
         
-		let code = sqlite3_exec(self.database, statement, { resultVoidPointer, columnCount, values, columns in
-			let resultPointer = UnsafeMutablePointer<Result>(resultVoidPointer)
-			let result = resultPointer.memory
+        bindHandler()
+        let result = Result()
+        while sqlite3_step(self.statementPointer.memory) == SQLITE_ROW {
+            
+            let row = Result.Row()
+            let columnCount = sqlite3_column_count(self.statementPointer.memory)
+            
+            for i in 0..<columnCount {
+                let row = Result.Row()
+                guard let value = String.fromCString(UnsafePointer(sqlite3_column_text(self.statementPointer.memory, i))) else {
+                    continue
+                }
+                
+                guard let columnName = String.fromCString(sqlite3_column_name(self.statementPointer.memory, i)) else {
+                    continue
+                }
+                
+                row.data[columnName] = value
+            }
+            
+            result.rows.append(row)
+        }
+        
+        let status = sqlite3_finalize(self.statementPointer.memory)
+        if status != SQLITE_OK {
+            print(errorMessage())
+            print("Preparing statement failed! status \(status)")
+            return []
+        }
+        
+        return result.rows
+    }
+    
+    func execute(statement: String) throws -> [Result.Row] {
+        let resultPointer = UnsafeMutablePointer<Result>.alloc(1)
+        var result = Result()
+		resultPointer.initializeFrom(&result, count: 1)
+        
+       let code = sqlite3_exec(self.database, statement, { resultVoidPointer, columnCount, values, columns in
+        let resultPointer = UnsafeMutablePointer<Result>(resultVoidPointer)
+        let result = resultPointer.memory
+        
+        let row = Result.Row()
+        for i in 0 ..< Int(columnCount) {
+            guard let value = String.fromCString(values[i]) else {
+                print("No value")
+                continue
+            }
+            
+            guard let column = String.fromCString(columns[i]) else {
+                print("No column")
+                continue
+            }
+            
+            row.data[column] = value
+        }
+        
+        result.rows.append(row)
+        return 0
 
-			let row = Result.Row()
-			for i in 0 ..< Int(columnCount) {
-				guard let value = String.fromCString(values[i]) else {
-					print("No value")
-					continue
-				}
-
-				guard let column = String.fromCString(columns[i]) else {
-					print("No column")
-					continue
-				}
-
-				row.data[column] = value
-			}
-
-			result.rows.append(row)
-			return 0
-		}, resultPointer, nil);
+		}, resultPointer, nil)
 
 		if code != SQLITE_OK {
-			let error = String.fromCString(sqlite3_errmsg(self.database))
-			print("Query error \(code) for statement '\(statement)' error \(error)")
+            print(errorMessage())
             throw SQLiteError.SQLException
 		}
 
 		return result.rows
 	}
     
-    func bind(values: [Any]) throws {
-        if values.isEmpty {
-            return
-        }
-        
-//        sqlite3_reset(self.database)
-//        sqlite3_clear_bindings(self.database)
-        
-        guard values.count == Int(sqlite3_bind_parameter_count(self.database)) else {
-            let paramCount = sqlite3_bind_parameter_count(self.database)
-            print("\(paramCount) values expected, \(values.count) passed")
-            throw SQLiteError.IndexOutOfBoundsException
-        }
-        
-        for i in 1...values.count {
-            bind(values[i - 1], index: i)
+    func errorMessage() -> String {
+        let error = String.fromCString(sqlite3_errmsg(self.database)) ?? ""
+        return error
+    }
+    
+    func reset(statementPointer: COpaquePointer) {
+        sqlite3_reset(statementPointer)
+        sqlite3_clear_bindings(statementPointer)
+    }
+    
+    func bind(value: String, position: Int) {
+        let status = sqlite3_bind_text(self.statementPointer.memory, Int32(position), value, -1, SQLITE_TRANSIENT)
+        if status != SQLITE_OK {
+            print(errorMessage())
         }
     }
     
-    func bind(value: Any, index: Int) {
-//        if value == nil {
-//            sqlite3_bind_null(self.database, Int32(index))
-//        } else
-        if value is Double {
-            sqlite3_bind_double(self.database, Int32(index), value as! Double)
-        } else if value is Int64 {
-            sqlite3_bind_int64(self.database, Int32(index), value as! Int64)
-        } else if value is String {
-            sqlite3_bind_text(self.database, Int32(index), value as! String, -1, SQLITE_TRANSIENT)
-        } else if value is Int {
-            self.bind(value, index: index)
-        } else if value is Bool {
-            self.bind(value, index: index)
-        } else {
-            fatalError("tried to bind unexpected value \(value)")
+    func bind(value: Int32, position: Int) {
+        if sqlite3_bind_int(self.statementPointer.memory, Int32(position), value) != SQLITE_OK {
+            print(errorMessage())
+        }
+    }
+    
+    func bind(value: Int64, position: Int) {
+        if sqlite3_bind_int64(self.statementPointer.memory, Int32(position), value) != SQLITE_OK {
+            print(errorMessage())
+        }
+    }
+    
+    func bind(value: Double, position: Int) {
+        if sqlite3_bind_double(self.statementPointer.memory, Int32(position), value) != SQLITE_OK {
+            print(errorMessage())
+        }
+    }
+    
+    func bind(value: Bool, position: Int) {
+        if sqlite3_bind_int(self.statementPointer.memory, Int32(position), value ? 1 : 0) != SQLITE_OK {
+            print(errorMessage())
         }
     }
     

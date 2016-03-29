@@ -12,35 +12,45 @@ public class SQLiteDriver: Fluent.Driver {
         let sql = SQL(query: query)
         
         let results: [SQLite.Result.Row]
-        if sql.values.count > 0 {
-            var position = 1
-            results = try self.database.execute(sql.statement) {
-                for value in sql.values {
-                    if let int = value.int {
-                        self.database.bind(Int32(int), position: position)
-                    } else if let double = value.double {
-                        self.database.bind(double, position: position)
-                    } else {
-                        self.database.bind(value.string, position: position)
+        do {
+                if sql.values.count > 0 {
+                    var position = 1
+                    results = try self.database.execute(sql.statement) {
+                        for value in sql.values {
+                            if let int = value.int {
+                                try self.database.bind(Int32(int), position: position)
+                            } else if let double = value.double {
+                                try self.database.bind(double, position: position)
+                            } else {
+                                try self.database.bind(value.string, position: position)
+                            }
+                            position += 1
+                        }
                     }
-                    position += 1
+                    
+                } else {
+                    results = try self.database.execute(sql.statement)
                 }
-            }
-            
-        } else {
-            results = try self.database.execute(sql.statement)
+                
+                var data: [[String: Value]] = []
+                for row in results {
+                    var t: [String: Value] = [:]
+                    for (k, v) in row.data {
+                        t[k] = v as String
+                    }
+                    data.append(t)
+                }
+                
+                return data
+        } catch SQLiteError.ConnectionException {
+            throw DriverError.Generic(message: "Connection Lost or failure to establish a connection")
+        } catch SQLiteError.FailureToBind {
+            throw DriverError.Generic(message: "Value to column bind failure")
+        } catch SQLiteError.IndexOutOfBoundsException {
+            throw DriverError.Generic(message: "Index out of bounds")
+        } catch SQLiteError.SQLException {
+            throw DriverError.Generic(message: "SQL statement invalid or cannot be executed")
         }
-        
-        var data: [[String: Value]] = []
-        for row in results {
-            var t: [String: Value] = [:]
-            for (k, v) in row.data {
-                t[k] = v as String
-            }
-            data.append(t)
-        }
-        
-        return data
     }
 
 }

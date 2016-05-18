@@ -1,46 +1,69 @@
 import Fluent
 
 public class SQLiteDriver: Fluent.Driver {
-    let database: SQLite!
-    public var databaseFilePath = "Database/main.sqlite"
-    
-    public init() throws {
-        self.database = try SQLite(path: self.databaseFilePath)
+
+    public var idKey: String = "id"
+
+    let database: SQLite
+
+    /**
+        Creates a new SQLiteDriver pointing
+        to the database at the supplied path.
+    */
+    public init(path: String = "Database/main.sqlite") throws {
+        database = try SQLite(path: path)
+    }
+
+    /**
+        Describes the errors this
+        driver can throw.
+    */
+    public enum Error: ErrorProtocol {
+        case unsupported(String)
     }
     
-    public func execute<T: Model>(query: Query<T>) throws -> [[String: Value]] {
+    /**
+        Executes the query.
+    */
+    public func execute<T: Model>(_ query: Query<T>) throws -> [[String: Value]] {
         let sql = SQL(query: query)
         
-        let results: [SQLite.Result.Row]
-        if sql.values.count > 0 {
-            var position = 1
-            results = try self.database.execute(sql.statement) {
-                for value in sql.values {
-                    if let int = value.int {
-                        self.database.bind(Int32(int), position: position)
-                    } else if let double = value.double {
-                        self.database.bind(double, position: position)
-                    } else {
-                        self.database.bind(value.string, position: position)
-                    }
-                    position += 1
+        var results: [SQLite.Result.Row]
+
+        print("SQLite executing: \(sql.statement)")
+        results = try database.execute(sql.statement) { preparer in
+            for value in sql.values {
+                switch value.structuredData {
+                case .integer(let int):
+                    try preparer.bind(int)
+                case .double(let double):
+                    try preparer.bind(double)
+                case .string(let string):
+                    try preparer.bind(string)
+                case .array(_):
+                    throw Error.unsupported("Array values not supported.")
+                case .dictionary(_):
+                    throw Error.unsupported("Dictionary values not supported.")
+                case .null: break
+                case .bool(let bool):
+                    try preparer.bind(bool)
                 }
             }
-            
+        }
+
+        if query.action == .create {
+            return [
+               [idKey : database.lastId]
+            ]
         } else {
-            results = try self.database.execute(sql.statement)
-        }
-        
-        var data: [[String: Value]] = []
-        for row in results {
-            var t: [String: Value] = [:]
-            for (k, v) in row.data {
-                t[k] = v as String
+            return results.map { row in
+                var data: [String: Value] = [:]
+                row.data.forEach { key, val in
+                    data[key] = val
+                }
+                return data
             }
-            data.append(t)
         }
-        
-        return data
     }
 
 }

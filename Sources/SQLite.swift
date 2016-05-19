@@ -19,7 +19,6 @@ public class SQLite {
     init(path: String) throws {
         let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX
         if sqlite3_open_v2(path, &database, options, nil) != SQLITE_OK {
-            sqlite3_close(database)
             throw Error.connection(errorMessage)
         }
     }

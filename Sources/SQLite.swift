@@ -63,7 +63,10 @@ public class SQLite {
                 let text = sqlite3_column_text(statement, i)
                 let name = sqlite3_column_name(statement, i)
 
-                let value = String(cString: UnsafePointer(text))
+                var value: String? = nil
+                if let text = text {
+                    value = String(cString: UnsafePointer(text))
+                }
                 let column = String(cString: name)
 
                 row.data[column] = value

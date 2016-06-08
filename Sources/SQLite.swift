@@ -7,11 +7,32 @@
 let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
 public class SQLite {
+    /**
+        The prepare closure is used
+        to bind values to the SQLite statement
+        in a safe, escaped manner.
+    */
     typealias PrepareClosure = ((Statement) throws -> ())
+
+    /**
+        Provides more useful type
+        information for the Database pointer.
+    */
     typealias Database = OpaquePointer
 
+    /**
+        An optional pointer to the
+        connection to the SQLite database.
+    */
     var database: Database?
 
+    /**
+        Opens a connection to the SQLite
+        database at a given path.
+     
+        If the database does not already exist,
+        it will be created.
+    */
     init(path: String) throws {
         let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX
         if sqlite3_open_v2(path, &database, options, nil) != SQLITE_OK {
@@ -19,31 +40,32 @@ public class SQLite {
         }
     }
 
+    /**
+        Closes a connetion to the database.
+    */
     func close() {
         sqlite3_close(database)
     }
 
-    struct Result {
-        struct Row {
-            var data: [String: String]
-
-            init() {
-                data = [:]
-            }
-        }
-
-        var rows: [Row]
-
-        init() {
-            rows = []
-        }
+    /**
+        Closes the database when deinitialized.
+    */
+    deinit {
+        self.close()
     }
 
+    /**
+        Executes a statement query string
+        and calls the prepare closure to bind
+        any prepared values.
+     
+        The resulting rows are returned if
+        no errors occur.
+    */
     func execute(_ queryString: String, prepareClosure: PrepareClosure = { _ in }) throws -> [Result.Row] {
         guard let database = self.database else {
             throw Error.execute("No database")
         }
-        bindPosition = 0
 
         let statementContainer = UnsafeMutablePointer<OpaquePointer?>.init(allocatingCapacity: 1)
         defer {
@@ -96,13 +118,20 @@ public class SQLite {
         return result.rows
     }
 
-    var lastId: Int {
+    /**
+        Returns an identifier for the last
+        inserted row.
+    */
+    var lastId: Int? {
+        guard let database = database else {
+            return nil
+        }
+
         let id = sqlite3_last_insert_rowid(database)
         return Int(id)
     }
 
     //MARK: Error
-
     public enum Error: ErrorProtocol {
         case connection(String)
         case close(String)
@@ -110,21 +139,35 @@ public class SQLite {
         case bind(String)
         case execute(String)
     }
+}
 
-    //MARK: Bind
+extension SQLite {
+    /**
+        Represents a row of data from
+        a SQLite table.
+    */
+    struct Result {
+        struct Row {
+            var data: [String: String]
 
-    var bindPosition: Int32 = 0
-    
-    var nextBindPosition: Int32 {
-        bindPosition += 1
-        return bindPosition
+            init() {
+                data = [:]
+            }
+        }
+
+        var rows: [Row]
+
+        init() {
+            rows = []
+        }
     }
-    
-
-
 }
 
 extension SQLite.Database {
+    /**
+        Returns the last error message
+        for the current database connection.
+    */
     var errorMessage: String {
         if let raw = sqlite3_errmsg(self) {
             return String(cString: raw) ?? "Unknown"
@@ -136,6 +179,12 @@ extension SQLite.Database {
 }
 
 extension SQLite {
+    /**
+        Represents a single database statement.
+        The statement is used to bind prepared
+        values and contains a pointer to the 
+        underlying SQLite statement memory.
+    */
     class Statement {
         typealias Pointer = OpaquePointer
 

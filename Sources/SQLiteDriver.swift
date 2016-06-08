@@ -33,9 +33,9 @@ public class SQLiteDriver: Fluent.Driver {
             try self.bind(statement: statement, to: sql.values)
         }
 
-        if query.action == .create {
+        if let id = database.lastId where query.action == .create {
             return [
-               [idKey : database.lastId]
+               [idKey : id]
             ]
         } else {
             return map(results: results)
@@ -54,6 +54,10 @@ public class SQLiteDriver: Fluent.Driver {
         return map(results: results)
     }
 
+    /**
+        Binds an array of values to the 
+        SQLite statement.
+    */
     func bind(statement: SQLite.Statement, to values: [Value]) throws {
         for value in values {
             switch value.structuredData {
@@ -76,6 +80,9 @@ public class SQLiteDriver: Fluent.Driver {
         }
     }
 
+    /**
+        Maps SQLite Results to Fluent results.
+    */
     func map(results: [SQLite.Result.Row]) -> [[String: Value]] {
         return results.map { row in
             var data: [String: Value] = [:]

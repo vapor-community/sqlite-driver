@@ -29,8 +29,8 @@ public class SQLiteDriver: Fluent.Driver {
         let sql = SQL(query: query)
         
         // print("SQLite executing: \(sql.statement)") // useful for developing
-        let results = try database.execute(sql.statement) { preparer in
-            try self.bind(preparer: preparer, to: sql.values)
+        let results = try database.execute(sql.statement) { statement in
+            try self.bind(statement: statement, to: sql.values)
         }
 
         if query.action == .create {
@@ -48,30 +48,30 @@ public class SQLiteDriver: Fluent.Driver {
         values and returns the results.
     */
     public func raw(_ statement: String, values: [Value] = []) throws -> [[String: Value]] {
-        let results = try database.execute(statement) { preparer in
-            try self.bind(preparer: preparer, to: values)
+        let results = try database.execute(statement) { statement in
+            try self.bind(statement: statement, to: values)
         }
         return map(results: results)
     }
 
-    func bind(preparer: SQLite, to values: [Value]) throws {
+    func bind(statement: SQLite.Statement, to values: [Value]) throws {
         for value in values {
             switch value.structuredData {
             case .int(let int):
-                try preparer.bind(int)
+                try statement.bind(int)
             case .double(let double):
-                try preparer.bind(double)
+                try statement.bind(double)
             case .string(let string):
-                try preparer.bind(string)
+                try statement.bind(string)
             case .array(_):
                 throw Error.unsupported("Array values not supported.")
             case .dictionary(_):
                 throw Error.unsupported("Dictionary values not supported.")
             case .null: break
             case .bool(let bool):
-                try preparer.bind(bool)
+                try statement.bind(bool)
             case .data(let data):
-                try preparer.bind(String(data))
+                try statement.bind(String(data))
             }
         }
     }

@@ -9,10 +9,7 @@ let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 public class SQLite {
     typealias PrepareClosure = ((SQLite) throws -> ())
 
-    private var statementPointer: UnsafeMutablePointer<OpaquePointer?>! = nil
-    private var statement: OpaquePointer {
-        return statementPointer.pointee!
-    }
+    private var statement: OpaquePointer?
 
     var database: OpaquePointer?
 
@@ -45,11 +42,21 @@ public class SQLite {
 
     func execute(_ queryString: String, prepareClosure: PrepareClosure = { _ in }) throws -> [Result.Row] {
         bindPosition = 0
-        statementPointer = UnsafeMutablePointer<OpaquePointer?>.init(allocatingCapacity: 1)
+
+        let statementPointer = UnsafeMutablePointer<OpaquePointer?>.init(allocatingCapacity: 1)
+        defer {
+            statementPointer.deinitialize()
+            self.statement = nil
+        }
 
         if sqlite3_prepare_v2(database, queryString, -1, statementPointer, nil) != SQLITE_OK {
             throw Error.prepare(errorMessage)
         }
+
+        guard let statement = statementPointer.pointee else {
+            return []
+        }
+        self.statement = statement
 
         try prepareClosure(self)
 
@@ -126,20 +133,32 @@ public class SQLite {
     }
 
     func bind(_ value: Double) throws {
-        if sqlite3_bind_double(statementPointer.pointee, nextBindPosition, value) != SQLITE_OK {
+        guard let statement = self.statement else {
+            return
+        }
+
+        if sqlite3_bind_double(statement, nextBindPosition, value) != SQLITE_OK {
             throw Error.bind(errorMessage)
         }
     }
 
     func bind(_ value: Int) throws {
-        if sqlite3_bind_int(statementPointer.pointee, nextBindPosition, Int32(value)) != SQLITE_OK {
+        guard let statement = self.statement else {
+            return
+        }
+
+        if sqlite3_bind_int(statement, nextBindPosition, Int32(value)) != SQLITE_OK {
             throw Error.bind(errorMessage)
         }
     }
 
     func bind(_ value: String) throws {
+        guard let statement = self.statement else {
+            return
+        }
+
         let strlen = Int32(value.characters.count)
-        if sqlite3_bind_text(statementPointer.pointee, nextBindPosition, value, strlen, SQLITE_TRANSIENT) != SQLITE_OK {
+        if sqlite3_bind_text(statement, nextBindPosition, value, strlen, SQLITE_TRANSIENT) != SQLITE_OK {
             throw Error.bind(errorMessage)
         }
     }

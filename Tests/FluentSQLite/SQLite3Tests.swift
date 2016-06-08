@@ -1,6 +1,4 @@
 import XCTest
-
-import Fluent
 @testable import FluentSQLite
 
 class SQLite3Tests: XCTestCase {

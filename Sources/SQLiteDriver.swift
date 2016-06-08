@@ -28,7 +28,7 @@ public class SQLiteDriver: Fluent.Driver {
     public func execute<T: Model>(_ query: Query<T>) throws -> [[String: Value]] {
         let sql = SQL(query: query)
         
-        print("SQLite executing: \(sql.statement)")
+        // print("SQLite executing: \(sql.statement)") // useful for developing
         let results = try database.execute(sql.statement) { preparer in
             try self.bind(preparer: preparer, to: sql.values)
         }
@@ -57,7 +57,7 @@ public class SQLiteDriver: Fluent.Driver {
     func bind(preparer: SQLite, to values: [Value]) throws {
         for value in values {
             switch value.structuredData {
-            case .integer(let int):
+            case .int(let int):
                 try preparer.bind(int)
             case .double(let double):
                 try preparer.bind(double)
@@ -70,6 +70,8 @@ public class SQLiteDriver: Fluent.Driver {
             case .null: break
             case .bool(let bool):
                 try preparer.bind(bool)
+            case .data(let data):
+                try preparer.bind(String(data))
             }
         }
     }

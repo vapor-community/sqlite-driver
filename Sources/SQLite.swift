@@ -67,7 +67,13 @@ public class SQLite {
                 if let text = text {
                     value = String(cString: UnsafePointer(text))
                 }
-                let column = String(cString: name)
+
+                let column: String
+                if let name = name {
+                    column = String(cString: name)
+                } else {
+                    column = ""
+                }
 
                 row.data[column] = value
             }
@@ -98,9 +104,11 @@ public class SQLite {
     }
     
     var errorMessage: String {
-        let raw = sqlite3_errmsg(database)
-
-        return String(cString: raw) ?? ""
+        if let raw = sqlite3_errmsg(database) {
+            return String(cString: raw) ?? "Unknown"
+        } else {
+            return "Unknown"
+        }
     }
 
     //MARK: Bind

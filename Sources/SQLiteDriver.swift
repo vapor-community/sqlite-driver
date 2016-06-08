@@ -28,7 +28,7 @@ public class SQLiteDriver: Fluent.Driver {
     public func execute<T: Model>(_ query: Query<T>) throws -> [[String: Value]] {
         let sql = SQL(query: query)
         
-        print("SQLite executing: \(sql.statement)")
+        // print("SQLite executing: \(sql.statement)") // useful for developing
         let results = try database.execute(sql.statement) { preparer in
             try self.bind(preparer: preparer, to: sql.values)
         }

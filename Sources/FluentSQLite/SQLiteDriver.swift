@@ -47,7 +47,7 @@ public class SQLiteDriver: Fluent.Driver {
         return []
     }
 
-    public func build(_ builder: Schema.Builder) throws {
+    public func schema(_ schema: Schema) throws {
 
     }
 

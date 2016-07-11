@@ -1,4 +1,5 @@
 import Fluent
+import SQLite
 
 public class SQLiteDriver: Fluent.Driver {
 
@@ -25,12 +26,12 @@ public class SQLiteDriver: Fluent.Driver {
     /**
         Executes the query.
     */
-    public func execute<T: Model>(_ query: Query<T>) throws -> [[String: Value]] {
-        let sql = SQL(query: query)
-        
-        // print("SQLite executing: \(sql.statement)") // useful for developing
-        let results = try database.execute(sql.statement) { statement in
-            try self.bind(statement: statement, to: sql.values)
+    @discardableResult
+    public func query<T: Model>(_ query: Query<T>) throws -> [[String: Value]] {
+        let serializer = GeneralSQLSerializer(sql: query.sql)
+        let (statement, values) = serializer.serialize()
+        let results = try database.execute(statement) { statement in
+            try self.bind(statement: statement, to: values)
         }
 
         if let id = database.lastId where query.action == .create {
@@ -40,6 +41,10 @@ public class SQLiteDriver: Fluent.Driver {
         } else {
             return map(results: results)
         }
+    }
+
+    public func schema(_ schema: Schema) throws {
+
     }
 
     /**

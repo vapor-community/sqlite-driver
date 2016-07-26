@@ -22,7 +22,7 @@ public class SQLiteDriver: Fluent.Driver {
     public enum Error: ErrorProtocol {
         case unsupported(String)
     }
-    
+
     /**
         Executes the query.
     */
@@ -44,11 +44,13 @@ public class SQLiteDriver: Fluent.Driver {
     }
 
     public func schema(_ schema: Schema) throws {
-
+      let serializer = GeneralSQLSerializer(sql: schema.sql)
+      let (statement, values) = serializer.serialize()
+      try _ = raw(statement, values: values)
     }
 
     /**
-        Executes a raw query with an 
+        Executes a raw query with an
         optional array of paramterized
         values and returns the results.
     */
@@ -60,7 +62,7 @@ public class SQLiteDriver: Fluent.Driver {
     }
 
     /**
-        Binds an array of values to the 
+        Binds an array of values to the
         SQLite statement.
     */
     func bind(statement: SQLite.Statement, to values: [Value]) throws {

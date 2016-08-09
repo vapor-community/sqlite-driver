@@ -1,4 +1,5 @@
 import Fluent
+import SQLite
 
 public class SQLiteDriver: Fluent.Driver {
 
@@ -21,16 +22,16 @@ public class SQLiteDriver: Fluent.Driver {
     public enum Error: ErrorProtocol {
         case unsupported(String)
     }
-    
+
     /**
         Executes the query.
     */
-    public func execute<T: Model>(_ query: Query<T>) throws -> [[String: Value]] {
-        let sql = SQL(query: query)
-        
-        // print("SQLite executing: \(sql.statement)") // useful for developing
-        let results = try database.execute(sql.statement) { statement in
-            try self.bind(statement: statement, to: sql.values)
+    @discardableResult
+    public func query<T: Model>(_ query: Query<T>) throws -> [[String: Value]] {
+        let serializer = GeneralSQLSerializer(sql: query.sql)
+        let (statement, values) = serializer.serialize()
+        let results = try database.execute(statement) { statement in
+            try self.bind(statement: statement, to: values)
         }
 
         if let id = database.lastId where query.action == .create {
@@ -42,8 +43,14 @@ public class SQLiteDriver: Fluent.Driver {
         }
     }
 
+    public func schema(_ schema: Schema) throws {
+      let serializer = GeneralSQLSerializer(sql: schema.sql)
+      let (statement, values) = serializer.serialize()
+      try _ = raw(statement, values: values)
+    }
+
     /**
-        Executes a raw query with an 
+        Executes a raw query with an
         optional array of paramterized
         values and returns the results.
     */
@@ -55,7 +62,7 @@ public class SQLiteDriver: Fluent.Driver {
     }
 
     /**
-        Binds an array of values to the 
+        Binds an array of values to the
         SQLite statement.
     */
     func bind(statement: SQLite.Statement, to values: [Value]) throws {

@@ -14,7 +14,4 @@ class SQLite3Tests: XCTestCase {
         XCTAssert(2 + 2 == 4, "Something is seriously wrong.")
     }
     
-    func testBind() {
-        let database = Database(SQLiteDriver())
-    }
 }

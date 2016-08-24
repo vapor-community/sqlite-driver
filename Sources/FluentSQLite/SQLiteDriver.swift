@@ -81,7 +81,8 @@ public class SQLiteDriver: Fluent.Driver {
                 throw Error.unsupported("Array values not supported.")
             case .object(_):
                 throw Error.unsupported("Dictionary values not supported.")
-            case .null: break
+            case .null:
+                try statement.null()
             case .bool(let bool):
                 try statement.bind(bool)
             case .bytes(let data):

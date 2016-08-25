@@ -1,7 +1,6 @@
 import XCTest
 @testable import FluentSQLite
 import Fluent
-import Foundation
 
 class JoinTests: XCTestCase {
     static let allTests = [
@@ -45,7 +44,7 @@ class JoinTests: XCTestCase {
 
         let compounds = try hydrogen.compounds().all()
         XCTAssertEqual(compounds.count, 2)
-        XCTAssertEqual(compounds.first?.id?.int, water.id?.int)
+        XCTAssertEqual(compounds.first?.name.string, water.name.string)
         XCTAssertEqual(compounds.last?.id?.int, sugar.id?.int)
     }
 }

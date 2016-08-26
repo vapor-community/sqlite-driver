@@ -86,7 +86,7 @@ public class SQLiteDriver: Fluent.Driver {
             case .bool(let bool):
                 try statement.bind(bool)
             case .bytes(let data):
-                try statement.bind(String(data))
+                try statement.bind(String(describing: data))
             }
         }
     }

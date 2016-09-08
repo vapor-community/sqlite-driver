@@ -97,8 +97,8 @@ public class SQLiteDriver: Fluent.Driver {
     func map(results: [SQLite.Result.Row]) -> Node {
         let res: [Node] = results.map { row in
             var object: Node = .object([:])
-            row.data.forEach { key, val in
-                object[key] = val.makeNode()
+            for (key, value) in row.data {
+                object[key] = value.makeNode()
             }
             return object
         }

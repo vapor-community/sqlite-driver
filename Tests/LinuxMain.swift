@@ -1,7 +1,7 @@
 #if os(Linux)
 
 import XCTest
-@testable import FluentSQLiteTestSuite
+@testable import FluentSQLiteTests
 
 XCTMain([
     testCase(SQLite3Tests.allTests),

@@ -1,6 +1,13 @@
 import Fluent
 
 final class Post: Entity {
+    /**
+     Turn the convertible into a node
+     
+     - throws: if convertible can not create a Node
+     - returns: a node if possible
+     */
+
     var id: Fluent.Node?
     var title: String
     var text: String
@@ -11,7 +18,7 @@ final class Post: Entity {
         self.text = text
     }
     
-    func makeNode() throws -> Node {
+    func makeNode(context:Context) throws -> Node {
         return try Node(node: [
             "id": id,
             "title": title,

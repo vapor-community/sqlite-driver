@@ -35,7 +35,7 @@ public class SQLiteDriver: Fluent.Driver {
         }
 
         if let id = database.lastId, query.action == .create {
-            return id.makeNode()
+            return try id.makeNode()
         } else {
             return map(results: results)
         }

@@ -28,7 +28,7 @@ public class SQLiteDriver: Fluent.Driver {
     */
     @discardableResult
     public func query<T: Entity>(_ query: Query<T>) throws -> Node {
-        let serializer = GeneralSQLSerializer(sql: query.sql)
+        let serializer = SQLiteSerializer(sql: query.sql)
         let (statement, values) = serializer.serialize()
         let results = try database.execute(statement) { statement in
             try self.bind(statement: statement, to: values)
@@ -42,7 +42,7 @@ public class SQLiteDriver: Fluent.Driver {
     }
 
     public func schema(_ schema: Schema) throws {
-      let serializer = GeneralSQLSerializer(sql: schema.sql)
+      let serializer = SQLiteSerializer(sql: schema.sql)
       let (statement, values) = serializer.serialize()
       try _ = raw(statement, values)
     }

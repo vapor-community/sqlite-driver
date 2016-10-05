@@ -17,16 +17,16 @@ class SQLite3Tests: XCTestCase {
     override func setUp() {
         driver = SQLiteDriver.makeTestConnection()
         database = Database(driver)
-    }
-    
-
-    func testSaveAndFind() {
-        _ = try! driver.raw("DROP TABLE IF EXISTS `posts`")
         do {
-            _ = try driver.raw("CREATE TABLE IF NOT EXISTS `posts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `title` CHAR(255), `text` CHAR(255))")
+            try Post.revert(database)
+            try Post.prepare(database)
+            Post.database = database
         } catch {
             XCTFail("Could not create table \(error)")
         }
+    }
+
+    func testSaveAndFind() {
 //        try! database.create("posts") { creator in
 //            creator.id()
 //            creator.string("title")
@@ -34,7 +34,6 @@ class SQLite3Tests: XCTestCase {
 //        }
         
         var post = Post(id: nil, title: "Vapor & Tests", text: "Lorem ipsum etc...")
-        Post.database = database
         
         do {
             try post.save()
@@ -54,6 +53,32 @@ class SQLite3Tests: XCTestCase {
         do {
             let post  = try Post.find(2)
             XCTAssertNil(post)
+        } catch {
+            XCTFail("Could not find post: \(error)")
+        }
+        
+        
+    }
+    
+    /**
+        This test ensures that a string containing a large number will
+        remain encoded as a string and not get coerced to a number internally.
+      */
+    func testLargeNumericInput() {
+        let longNumericName = String(repeating: "1", count: 1000)
+        do {
+            var post = Post(id: nil,
+                            title: longNumericName,
+                            text: "Testing long number...")
+            try post.save()
+        } catch {
+            XCTFail("Could not create post: \(error)")
+        }
+        
+        do {
+            let post = try Post.find(1)
+            XCTAssertNotNil(post)
+            XCTAssertEqual(post?.title, longNumericName)
         } catch {
             XCTFail("Could not find post: \(error)")
         }

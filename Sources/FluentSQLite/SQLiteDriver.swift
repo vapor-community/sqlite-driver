@@ -36,6 +36,12 @@ public class SQLiteDriver: Fluent.Driver {
 
         if let id = database.lastId, query.action == .create {
             return try id.makeNode()
+        } else if query.action == .count {
+            guard let (_, value) = results.first?.data.first,
+                let count = Int(value) else {
+                return .number(.int(0))
+            }
+            return .number(.int(count))
         } else {
             return map(results: results)
         }

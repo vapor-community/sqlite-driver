@@ -3,7 +3,7 @@ import XCTest
 @testable import Fluent
 
 class SQLiteSerializerTests : XCTestCase {
-    static var allTests: [(String, (SQLiteSerializerTests) -> () throws -> Void)] {
+    static let allTests = {
         return [
             ("testSql", testSql)
         ]

@@ -11,6 +11,7 @@ final class Post: Entity {
     var id: Fluent.Node?
     var title: String
     var text: String
+    var exists: Bool = false
     
     init(id: Node?, title: String, text: String) {
         self.id = id

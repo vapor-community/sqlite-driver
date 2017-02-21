@@ -1,7 +1,7 @@
 import XCTest
 @testable import FluentSQLite
 @testable import Fluent
-
+import FluentTester
 
 class SQLite3Tests: XCTestCase {
     static var allTests: [(String, (SQLite3Tests) -> () throws -> Void)] {
@@ -33,7 +33,7 @@ class SQLite3Tests: XCTestCase {
 //            creator.string("text")
 //        }
         
-        var post = Post(id: nil, title: "Vapor & Tests", text: "Lorem ipsum etc...")
+        let post = Post(id: nil, title: "Vapor & Tests", text: "Lorem ipsum etc...")
         
         do {
             try post.save()
@@ -67,7 +67,7 @@ class SQLite3Tests: XCTestCase {
     func testLargeNumericInput() {
         let longNumericName = String(repeating: "1", count: 1000)
         do {
-            var post = Post(id: nil,
+            let post = Post(id: nil,
                             title: longNumericName,
                             text: "Testing long number...")
             try post.save()

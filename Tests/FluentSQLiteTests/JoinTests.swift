@@ -1,6 +1,7 @@
 import XCTest
 @testable import FluentSQLite
 import Fluent
+@testable import FluentTester
 
 class JoinTests: XCTestCase {
     static let allTests = [
@@ -28,21 +29,21 @@ class JoinTests: XCTestCase {
         Compound.database = database
         Pivot<Atom, Compound>.database = database
 
-        var hydrogen = Atom(name: "Hydrogen", protons: 1)
+        let hydrogen = Atom(id: nil, name: "Hydrogen", protons: 1, weight: 1.00794)
         try hydrogen.save()
 
-        var water = Compound(name: "Water")
+        let water = Compound(id: nil, name: "Water")
         try water.save()
-        var hydrogenWater = Pivot<Atom, Compound>(hydrogen, water)
+        let hydrogenWater = try Pivot(hydrogen, water)
         try hydrogenWater.save()
 
-        var sugar = Compound(name: "Sugar")
+        let sugar = Compound(id: nil, name: "Sugar")
         try sugar.save()
-        var hydrogenSugar = Pivot<Atom, Compound>(hydrogen, sugar)
+        let hydrogenSugar = try Pivot(hydrogen, sugar)
         try hydrogenSugar.save()
 
 
-        let compounds = try hydrogen.compounds().all()
+        let compounds = try hydrogen.compounds.all()
         XCTAssertEqual(compounds.count, 2)
         XCTAssertEqual(compounds.first?.name.string, water.name.string)
         XCTAssertEqual(compounds.last?.id?.int, sugar.id?.int)

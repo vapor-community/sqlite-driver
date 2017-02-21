@@ -1,6 +1,7 @@
 import XCTest
 @testable import FluentSQLite
 @testable import Fluent
+import FluentTester
 
 class SQLiteSerializerTests : XCTestCase {
     static let allTests = {

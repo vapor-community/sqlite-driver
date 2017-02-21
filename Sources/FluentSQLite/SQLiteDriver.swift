@@ -1,9 +1,15 @@
 import Fluent
 import SQLite
 
-public class SQLiteDriver: Fluent.Driver {
+public class SQLiteDriver: Fluent.Driver, Connection {
 
     public var idKey: String = "id"
+    public var idType: IdentifierType = .int
+
+    public var closed: Bool {
+        // TODO: FIXME
+        return false
+    }
 
     let database: SQLite
 
@@ -13,6 +19,10 @@ public class SQLiteDriver: Fluent.Driver {
     */
     public init(path: String = "Database/main.sqlite") throws {
         database = try SQLite(path: path)
+    }
+
+    private init(database: SQLite) {
+        self.database = database
     }
 
     /**
@@ -87,6 +97,9 @@ public class SQLiteDriver: Fluent.Driver {
                 try statement.bind(bool)
             case .bytes(let data):
                 try statement.bind(String(describing: data))
+            case .date(let date):
+                let dateString = Date.outgoingDateFormatter.string(from: date)
+                try statement.bind(dateString)
             }
         }
     }
@@ -105,4 +118,7 @@ public class SQLiteDriver: Fluent.Driver {
         return .array(res)
     }
 
+    public func makeConnection() throws -> Connection {
+        return SQLiteDriver(database: database)
+    }
 }

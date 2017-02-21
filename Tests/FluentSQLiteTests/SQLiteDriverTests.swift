@@ -1,7 +1,7 @@
 import XCTest
 @testable import FluentSQLite
 @testable import Fluent
-
+import FluentTester
 
 class SQLite3Tests: XCTestCase {
     static var allTests: [(String, (SQLite3Tests) -> () throws -> Void)] {

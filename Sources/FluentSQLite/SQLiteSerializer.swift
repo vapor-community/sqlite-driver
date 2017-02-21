@@ -8,7 +8,7 @@ public class SQLiteSerializer: GeneralSQLSerializer {
     /**
         Serializes a SQLite data type.
       */
-    public override func sql(_ type: Schema.Field.DataType) -> String {
+    public override func sql(_ type: Schema.Field.DataType, primaryKey: Bool) -> String {
         // SQLite has a design where any data type that does not contain `TEXT`,
         // `CLOB`, or `CHAR` will be treated with `NUMERIC` affinity.
         // All SQLite `STRING` fields should instead be declared with `TEXT`.
@@ -16,6 +16,6 @@ public class SQLiteSerializer: GeneralSQLSerializer {
         if case .string(_)  = type {
             return "TEXT"
         }
-        return super.sql(type)
+        return super.sql(type, primaryKey: primaryKey)
     }
 }

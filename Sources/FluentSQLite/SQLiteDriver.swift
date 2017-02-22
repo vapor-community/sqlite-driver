@@ -47,7 +47,7 @@ public class SQLiteDriver: Fluent.Driver, Connection {
         if let id = database.lastId, query.action == .create {
             return try id.makeNode()
         } else {
-            return map(results: results)
+            return try map(results: results)
         }
     }
 
@@ -66,7 +66,7 @@ public class SQLiteDriver: Fluent.Driver, Connection {
         let results = try database.execute(statement) { statement in
             try self.bind(statement: statement, to: values)
         }
-        return map(results: results)
+        return try map(results: results)
     }
 
     /**
@@ -107,15 +107,24 @@ public class SQLiteDriver: Fluent.Driver, Connection {
     /**
         Maps SQLite Results to Fluent results.
     */
-    func map(results: [SQLite.Result.Row]) -> Node {
-        let res: [Node] = results.map { row in
+    func map(results: [SQLite.Result.Row]) throws -> Node {
+        let nodes: [Node] = try results.map { row in
             var object: Node = .object([:])
             for (key, value) in row.data {
-                object[key] = value.makeNode()
+                switch value {
+                case .text(let string):
+                    object[key] = string.makeNode()
+                case .integer(let integer):
+                    object[key] = try integer.makeNode()
+                case .double(let double):
+                    object[key] = double.makeNode()
+                case .null:
+                    object[key] = .null
+                }
             }
             return object
         }
-        return .array(res)
+        return .array(nodes)
     }
 
     public func makeConnection() throws -> Connection {
